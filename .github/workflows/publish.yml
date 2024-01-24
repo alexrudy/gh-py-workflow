@@ -1,0 +1,46 @@
+name: Publish Python 🐍 distributions 📦 to PyPI
+
+on:
+  workflow_call:
+    inputs:
+      release:
+        description: 'Is this a release?'
+        required: true
+        type: boolean
+      python_version:
+        description: 'Python version'
+        required: false
+        default: '3.11'
+        type: string
+    secrets:
+      pypi_password:
+        description: 'PyPI password'
+        required: true
+
+jobs:
+  build-and-publish:
+    name: Build and publish Python 🐍 distributions 📦 to PyPI
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ inputs.python_version }}
+          cache: 'pip'
+          cache-dependency-path: 'requirements/*.txt'
+      - name: Install requirements
+        run: >-
+          python -m
+          pip install
+          -r requirements/dev.txt
+      - name: Build a binary wheel and a source tarball
+        run: >-
+          python -m build
+      - name: Publish distribution 📦 to PyPI
+        if: inputs.release
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.pypi_password }}
